@@ -2,7 +2,6 @@ package ru.yandex.prakticum.order;
 
 import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
-
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.blankOrNullString;
 
@@ -16,7 +15,6 @@ public class OrderChecks {
                 .and()
                 .body("track", is(greaterThan(0)));
     }
-
     @Step("OrderList returned successfully with StatusCode 200 and not empty orders section in response")
     public void returnedSuccessfully(ValidatableResponse response) {
         response

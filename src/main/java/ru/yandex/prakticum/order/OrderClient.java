@@ -7,7 +7,7 @@ import ru.yandex.prakticum.Client;
 public class OrderClient extends Client {
     public static final String ROOT = "/orders";
 
-    @Step("Создать заказ")
+    @Step("Создать заказ.")
     public ValidatableResponse create(Order order) {
         return spec()
                 .body(order)
@@ -15,12 +15,10 @@ public class OrderClient extends Client {
                 .post(ROOT)
                 .then().log().all();
     }
-
-    @Step("Получить список заказов. Без параметров")
+    @Step("Получить список всех заказов.")
     public ValidatableResponse getOrderList() {
         return spec()
                 .get(ROOT)
                 .then().log().all();
     }
-
 }

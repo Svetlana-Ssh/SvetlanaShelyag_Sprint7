@@ -6,16 +6,14 @@ import org.junit.Test;
 
 
 public class TestGetOrderListSuccess {
-
     private final OrderClient client = new OrderClient();
     private final OrderChecks check = new OrderChecks();
 
     @Test
-    @DisplayName("Check order list is returned in response body. Get without parameters.")
+    @DisplayName("Проверяем, что список заказов возвращается в response body. Запрос без параметров.")
     public void getOrderListWithoutParameters(){
 
         ValidatableResponse getOrderListResponse = client.getOrderList();
         check.returnedSuccessfully(getOrderListResponse);
-
     }
 }

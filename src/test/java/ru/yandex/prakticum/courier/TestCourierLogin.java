@@ -5,11 +5,7 @@ import io.restassured.response.ValidatableResponse;
 import org.junit.After;
 import org.junit.Test;
 
-
-import static org.junit.Assert.assertEquals;
-
 public class TestCourierLogin {
-
     private final CourierGenerator generator = new CourierGenerator();
     private final CourierClient client = new CourierClient();
     private final CourierChecks check = new CourierChecks();
@@ -19,27 +15,19 @@ public class TestCourierLogin {
     public void deleteCourier() {
         if (courierId > 0) {
             System.out.println("Удаляем тестового курьера id: " + courierId);
-            ValidatableResponse response = client.delete(courierId);
-            check.deletedSuccessfully(response);
+            client.delete(courierId);
         }
     }
 
     @Test
-    @DisplayName("Курьер может авторизоваться. При заданных Login & Password - проверяется в TestCourierCreation.createNewUniqueCourier()")
-    public void CourierCanLogin(){}
-
-    @Test
-    @DisplayName("Повторная авторизация с существующими Login и Password проходит так же успешно и возвращает id.")
-    public void CourierCanLoginSecondTime(){
+    @DisplayName("Созданный курьер может успешно авторизоваться.")
+    public void CourierCanLogin(){
         Courier courier = generator.random();
         client.create(courier);
 
         Credentials creds = Credentials.from(courier);
         ValidatableResponse loginResponse = client.login(creds);
         courierId = check.loggedInSuccessfully(loginResponse);
-
-        ValidatableResponse secondLoginResponse = client.login(creds);
-        assertEquals(courierId, check.loggedInSuccessfully(secondLoginResponse));
     }
 
     @Test
@@ -47,17 +35,13 @@ public class TestCourierLogin {
     public void CannotLoginWithNotExistingLoginAndPassword(){
         Courier courier = generator.random();
         client.create(courier);
-
         Credentials creds = Credentials.from(courier);
-        ValidatableResponse loginResponse = client.login(creds);
-        courierId = check.loggedInSuccessfully(loginResponse);
+        courierId = client.getID(creds);
 
         creds.setLogin(creds.getLogin() + "NotExist");
         creds.setPassword(creds.getPassword() + "NotExist");
-
-        loginResponse = client.login(creds);
-        var message = check.loginFailed(loginResponse, 404);
-        check.compareMsgToSpecLoginFailsWithWrongLoginPassword(message);
+        ValidatableResponse loginResponse = client.login(creds);
+        check.loginFailedWithWrongData(loginResponse);
     }
 
     @Test
@@ -65,17 +49,12 @@ public class TestCourierLogin {
     public void CannotLoginWithoutLogin(){
         Courier courier = generator.random();
         client.create(courier);
-
         Credentials creds = Credentials.from(courier);
-        ValidatableResponse loginResponse = client.login(creds);
-        courierId = check.loggedInSuccessfully(loginResponse);
+        courierId = client.getID(creds);
 
         creds.setLogin(null);
         ValidatableResponse loginResponseLoginNULL = client.login(creds);
-        var message = check.loginFailed(loginResponseLoginNULL, 400);
-        check.compareMsgToSpecLoginWithoutLoginPassword(message);
+        check.loginFailedWithInsufficientData(loginResponseLoginNULL);
     }
-
-    //  Остальные тесты на обработку ошибок для неверных пар Логин, Пароль вынесла в параметризованный тест: TestCourierLoginErrHndlrParam
-
 }
+//  Остальные тесты на обработку ошибок для неверных пар Логин, Пароль вынесла в параметризованный тест: TestCourierLoginErrHndlrParam

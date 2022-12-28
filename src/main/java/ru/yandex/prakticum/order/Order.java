@@ -127,5 +127,4 @@ public class Order {
                 "color='" + Arrays.toString(color) + '\'' +
                 '}';
     }
-
 }

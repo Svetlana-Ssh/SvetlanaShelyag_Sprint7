@@ -6,7 +6,6 @@ import org.junit.After;
 import org.junit.Test;
 
 public class TestCourierCreation {
-
     private final CourierGenerator generator = new CourierGenerator();
     private final CourierClient client = new CourierClient();
     private final CourierChecks check = new CourierChecks();
@@ -16,102 +15,81 @@ public class TestCourierCreation {
     public void deleteCourier() {
         if (courierId > 0) {
             System.out.println("Удаляем тестового курьера id: " + courierId);
-            ValidatableResponse response = client.delete(courierId);
-            check.deletedSuccessfully(response);
+            client.delete(courierId);
         }
     }
 
     @Test
-    @DisplayName("Check new unique courier creation, status code and body")
+    @DisplayName("Успешное создание уникального курьера, status code and body")
     public void createNewUniqueCourier(){
-
         Courier courier = generator.random();
         ValidatableResponse creationResponse = client.create(courier);
-        check.createdSuccessfully(creationResponse);
-
-
         Credentials creds = Credentials.from(courier);
-        ValidatableResponse loginResponse = client.login(creds);
-        courierId = check.loggedInSuccessfully(loginResponse);
+        courierId = client.getID(creds);
+        check.createdSuccessfully(creationResponse);
     }
 
     @Test
-    @DisplayName("Check second courier with the same login, password and firstName can't be created. Check status code and message for non-unique courier")
+    @DisplayName("Курьер с такими же параметрами не может быть создан второй раз. Check status code and message for non-unique courier")
     public void cannotCreateTheSameCourierTwice() {
         Courier courier = generator.random();
-        ValidatableResponse creationResponse = client.create(courier);
-        check.createdSuccessfully(creationResponse);
+        client.create(courier);
 
         Credentials creds = Credentials.from(courier);
-        ValidatableResponse loginResponse = client.login(creds);
-        courierId = check.loggedInSuccessfully(loginResponse);
+        courierId = client.getID(creds);
 
         ValidatableResponse creationResponseForNonUnique = client.create(courier);
-        String message = check.creationFailed(creationResponseForNonUnique, 409);
-        check.compareMsgToSpecCreateNonUniqueCourier(message);
+        check.creationFailedForNonUnique(creationResponseForNonUnique);
     }
 
     @Test
-    @DisplayName("если создать пользователя с логином, который уже есть, возвращается ошибка. Password and FirstName отличаются")
-    public void cannotCreateTheSameCourierWithExistingLogin() {
+    @DisplayName("Попытка создать пользователя с логином, который уже есть: возвращается ошибка. Password and FirstName отличаются")
+    public void cannotCreateCourierWithExistingLogin() {
         Courier courier = generator.random();
-        ValidatableResponse creationResponse = client.create(courier);
-        check.createdSuccessfully(creationResponse);
+        client.create(courier);
 
         Credentials creds = Credentials.from(courier);
-        ValidatableResponse loginResponse = client.login(creds);
-        courierId = check.loggedInSuccessfully(loginResponse);
+        courierId = client.getID(creds);
 
         courier.setFirstName(courier.getFirstName()+"new");
         courier.setPassword(courier.getPassword()+"new");
 
         ValidatableResponse creationResponseForNonUnique = client.create(courier);
-        String message = check.creationFailed(creationResponseForNonUnique, 409);
-        check.compareMsgToSpecCreateNonUniqueCourier(message);
+        check.creationFailedForNonUnique(creationResponseForNonUnique);
     }
 
     @Test
-    @DisplayName("Login. Чтобы создать курьера, нужно передать в ручку все обязательные поля")
+    @DisplayName("Попытка создания курьера без Login. Чтобы создать курьера, нужно передать в ручку все обязательные поля")
     public void cannotCreateCourierWithoutLogin() {
         var courier = generator.random();
         courier.setLogin(null);
 
         ValidatableResponse response = client.create(courier);
-
-        var message = check.creationFailed(response, 400);
-
-        check.compareMsgToSpecCreateCourierWithoutLoginPassword(message);
+        check.creationFailedWithoutLoginPassword(response);
     }
 
     @Test
-    @DisplayName("Password. Чтобы создать курьера, нужно передать в ручку все обязательные поля")
+    @DisplayName("Попытка создать курьера без Password. Чтобы создать курьера, нужно передать в ручку все обязательные поля")
     public void cannotCreateCourierWithoutPassword() {
         var courier = generator.random();
         courier.setPassword(null);
 
         ValidatableResponse response = client.create(courier);
-
-        var message = check.creationFailed(response, 400);
-
-        check.compareMsgToSpecCreateCourierWithoutLoginPassword(message);
+        check.creationFailedWithoutLoginPassword(response);
     }
 
     @Test
-    @DisplayName("FirstName. Чтобы создать курьера, нужно передать в ручку все обязательные поля")
-    // Требуется уточнить спецификацию. Является ли поле firstName обязательным? Какое expected behavior на его отсутстввие?
-    // После этого поправить или тест или код.
-    //? В данном тесте не предусмотрено удаление курьера. Но т.к. тест отрабатывает not as expected, курьер создается и не удаляется. Как быть в таких случаях?
+    @DisplayName("Попытка создать курьера без FirstName. Чтобы создать курьера, нужно передать в ручку все обязательные поля")
+    // По спецификации, firstName являтся обязательным. И поведение должно быть как и для login, password.
+    // Но курьер создается, и по данной спецификации - это ошибка, тест фейлится.
+    // В данном тесте не предусмотрено удаление курьера. Но т.к. тест отрабатывает not as expected, курьер создается и не удаляется.
     public void cannotCreateCourierWithoutFirstName() {
         var courier = generator.random();
         courier.setFirstName(null);
 
         ValidatableResponse response = client.create(courier);
-
-        var message = check.creationFailed(response, 400);
-
-        check.compareMsgToSpecCreateCourierWithoutLoginPassword(message);
+        check.creationFailedWithoutLoginPassword(response);
     }
-
 }
 
 

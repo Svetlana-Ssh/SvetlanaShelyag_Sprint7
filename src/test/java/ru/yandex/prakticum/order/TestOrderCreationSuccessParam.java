@@ -1,16 +1,14 @@
 package ru.yandex.prakticum.order;
 
 import com.google.gson.Gson;
+import io.qameta.allure.Description;
 import io.restassured.response.ValidatableResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-
-
 @RunWith(Parameterized.class)
 public class TestOrderCreationSuccessParam {
-
     private final String firstName;
     private final String lastName;
     private final String address;
@@ -21,10 +19,8 @@ public class TestOrderCreationSuccessParam {
     private final String comment;
     private final String[] color;
 
-
     private final OrderClient client = new OrderClient();
     private final OrderChecks check = new OrderChecks();
-
 
     public TestOrderCreationSuccessParam(String firstName, String lastName, String address, String metroStation, String phone, int rentTime, String deliveryDate, String comment, String[] color) {
             this.firstName = firstName;
@@ -37,7 +33,6 @@ public class TestOrderCreationSuccessParam {
             this.comment = comment;
             this.color = color;
     }
-
     @Parameterized.Parameters(name = "Комментарий: {7}")
     //Набор тестовых данных. Проверяются разные комбинации параметров при создании заказа. Набор следует расширить, указав разные допустимые значения, не только для цвета. Уточнить спецификацию, какие необходимые.
     public static Object[][] checkCreateOrder() {
@@ -50,14 +45,13 @@ public class TestOrderCreationSuccessParam {
         };
     }
     @Test
+    @Description("Проверка успешного создание заказа с набором параметров")
     public void shouldCreateOrder() {
-
         Order order = new Order(firstName,lastName,address,metroStation,phone,rentTime,deliveryDate,comment,color);
         Gson gson = new Gson();
         System.out.println(gson.toJson(order));
 
         ValidatableResponse orderCreateResponse = client.create(order);
         check.createdSuccessfully(orderCreateResponse);
-
     }
 }

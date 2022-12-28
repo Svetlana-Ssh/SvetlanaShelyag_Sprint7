@@ -1,45 +1,37 @@
 package ru.yandex.prakticum.courier;
 
-import io.qameta.allure.junit4.DisplayName;
+import io.qameta.allure.Description;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import ru.yandex.prakticum.constants.CredsState;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static ru.yandex.prakticum.constants.CredsState.*;
-
 
 @RunWith(Parameterized.class)
 public class TestCourierLoginErrHndlrParam {
-
     private final CourierGenerator generator = new CourierGenerator();
     private final CourierClient client = new CourierClient();
     private final CourierChecks check = new CourierChecks();
     private int courierId;
-
     private final CredsState login;
     private final CredsState password;
     private final int expectedStatusCode;
-    private final String errorMessage;
+    private final String expectedErrorMessage;
 
-
-    public TestCourierLoginErrHndlrParam(CredsState login, CredsState password, int expectedStatusCode, String errorMessage) {
+    public TestCourierLoginErrHndlrParam(CredsState login, CredsState password, int expectedStatusCode, String expectedErrorMessage) {
         this.login = login;
         this.password = password;
         this.expectedStatusCode = expectedStatusCode;
-        this.errorMessage = errorMessage;
+        this.expectedErrorMessage = expectedErrorMessage;
     }
 
     @After
     public void deleteCourier() {
         if (courierId > 0) {
             System.out.println("Удаляем тестового курьера id: " + courierId);
-            ValidatableResponse response = client.delete(courierId);
-            check.deletedSuccessfully(response);
+            client.delete(courierId);
         }
     }
 
@@ -53,17 +45,18 @@ public class TestCourierLoginErrHndlrParam {
                 {IS_TRUE, IS_FALSE, 404,"Учетная запись не найдена"},
                 {IS_FALSE, IS_TRUE, 404,"Учетная запись не найдена"},
                 {IS_FALSE, IS_FALSE, 404,"Учетная запись не найдена"},
+                {IS_EMPTY, IS_TRUE, 400,"Недостаточно данных для входа"},
+                {IS_TRUE, IS_EMPTY, 400,"Недостаточно данных для входа"},
         };
     }
     @Test
-    @DisplayName(value = "Проверка обработки ошибок при разных комбинациях неверных Логин, Пароль. (IS_TRUE, IS_FALSE, NOT_DEFINED)")
+    @Description("Проверка обработки ошибок при разных комбинациях неверных Логин, Пароль. (IS_TRUE, IS_FALSE, NOT_DEFINED, IS_EMPTY)")
     public void CannotLoginErrHndlr() {
         Courier courier = generator.random();
         client.create(courier);
 
         Credentials creds = Credentials.from(courier);
-        ValidatableResponse loginResponse = client.login(creds);
-        courierId = check.loggedInSuccessfully(loginResponse);
+        courierId = client.getID(creds);
 
         //Преобразование существующих кредов в зависимости от параметров теста в null или неправильные.
         switch(login) {
@@ -74,6 +67,9 @@ public class TestCourierLoginErrHndlrParam {
                 creds.setLogin("NotExist_" + courier.getLogin());
                 break;
             case IS_TRUE:
+                break;
+            case IS_EMPTY:
+                creds.setLogin("");
                 break;
         }
 
@@ -86,11 +82,12 @@ public class TestCourierLoginErrHndlrParam {
                 break;
             case IS_TRUE:
                 break;
+            case IS_EMPTY:
+                creds.setPassword("");
+                break;
         }
 
         ValidatableResponse loginResponseLoginFailed = client.login(creds);
-        var message = check.loginFailed(loginResponseLoginFailed, expectedStatusCode);
-        assertThat(message, is(errorMessage));
+        check.loginFailed(loginResponseLoginFailed, expectedStatusCode, expectedErrorMessage);
     }
-
 }

@@ -1,7 +1,6 @@
 package ru.yandex.prakticum.courier;
 
 import org.junit.Test;
-
 import java.util.Objects;
 
 public class TestCourierGenerator {

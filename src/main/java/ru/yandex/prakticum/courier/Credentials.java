@@ -1,7 +1,6 @@
 package ru.yandex.prakticum.courier;
 
 public class Credentials {
-
     private String login;
     private String password;
 
@@ -9,15 +8,6 @@ public class Credentials {
         this.login = login;
         this.password = password;
     }
-
-    /* ?Есть ли принципиальный момент в создании кредов из курьера через метод, а не через конструктор?
-
-    public Credentials(Courier courier) {
-        this.login = courier.getLogin();
-        this.password = courier.getPassword();
-    }
-    */
-
     public static Credentials from(Courier courier) {
         return new Credentials(courier.getLogin(), courier.getPassword());
     }
